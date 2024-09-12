@@ -1,4 +1,4 @@
-﻿using Demo.BusinessLogicLayer.Repositories;
+﻿using Demo.BusinessLogicLayer.Interfaces;
 using Demo.DataAccessLayer.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -39,31 +39,13 @@ namespace Demo.PresentationLayer.Controllers
 
             return RedirectToAction(nameof(Index));
         }
-        public IActionResult Details(int? id)
-        {
-            if(!id.HasValue)
-            {
-                return BadRequest();
-            }
-            var department = _repository.Get(id.Value);
-            if(department is null) { return NotFound(); }
-            return View(department);
+        public IActionResult Details(int? id) => DepartmentControllerHandler(id, nameof(Details));
+       
 
+        public IActionResult Edit(int? id) => DepartmentControllerHandler(id, nameof(Edit));
 
-
-        }
-
-        public IActionResult Edit(int? id)
-        {
-            if (!id.HasValue)
-            {
-                return BadRequest();
-            }
-            var department = _repository.Get(id.Value);
-            if (department is null) { return NotFound(); }
-            return View(department);
-        }
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Edit([FromRoute] int id,  Department department)
         {
             if(id!= department.Id) { return BadRequest(); }
@@ -84,16 +66,8 @@ namespace Demo.PresentationLayer.Controllers
             return View(department);
         }
 
-        public IActionResult Delete(int? id)
-        {
-            if (!id.HasValue)
-            {
-                return BadRequest();
-            }
-            var department = _repository.Get(id.Value);
-            if (department is null) { return NotFound(); }
-            return View(department);
-        }
+        public IActionResult Delete(int? id) => DepartmentControllerHandler(id , nameof(Delete));
+
 
         [HttpPost]
         [ActionName("Delete")]
@@ -116,5 +90,18 @@ namespace Demo.PresentationLayer.Controllers
             }
             return View(department);
         }
+
+        private IActionResult DepartmentControllerHandler(int? id , string viewName)
+        {
+            if (!id.HasValue)
+            {
+                return BadRequest();
+            }
+            var department = _repository.Get(id.Value);
+            if (department is null) { return NotFound(); }
+            return View(viewName ,department);
+
+        }
     }
+
 }
