@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Demo.DataAccessLayer.Data;
+using Demo.DataAccessLayer.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +8,8 @@ using System.Threading.Tasks;
 
 namespace Demo.BusinessLogicLayer.Interfaces
 {
-    internal interface IEmployeeRepository
+    public interface IEmployeeRepository : IGenericRepository<Employee>
     {
+        public IEnumerable<Employee> GetAll(string Address);
     }
 }

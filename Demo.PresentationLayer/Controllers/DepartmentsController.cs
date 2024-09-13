@@ -2,21 +2,23 @@
 using Demo.DataAccessLayer.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-
+ 
 namespace Demo.PresentationLayer.Controllers
 {
     public class DepartmentsController : Controller
     {
-        private readonly IDepartmentRepository _repository;
+        private IDepartmentRepository _repo;
+       // private IGenericRepository<Department> _repository; 
+       // private readonly IDepartmentRepository _repository;
 
-        public DepartmentsController(IDepartmentRepository departmentRepository)
+        public DepartmentsController(IDepartmentRepository repo)
         {
-            _repository = departmentRepository;
+            _repo = repo;
         }
         [HttpGet]
         public IActionResult Index()
         {
-            var departments = _repository.GetAll();
+            var departments = _repo.GetAll();
             //Retrieve All Departments 
             return View(departments);
         }
@@ -35,7 +37,7 @@ namespace Demo.PresentationLayer.Controllers
             {
                 return View(department);
             }
-            _repository.Create(department);
+            _repo.Create(department);
 
             return RedirectToAction(nameof(Index));
         }
@@ -54,7 +56,7 @@ namespace Demo.PresentationLayer.Controllers
             {
                 try
                 {
-                    _repository.Update(department);
+                    _repo.Update(department);
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
@@ -74,12 +76,12 @@ namespace Demo.PresentationLayer.Controllers
         public IActionResult ConfirmDelete(int? id)
         {
             if (!id.HasValue) return BadRequest();
-            var department = _repository.Get(id.Value);
+            var department = _repo.Get(id.Value);
             if (department is null) return NotFound();
 
             try
             {
-                _repository.Delete(department);
+                _repo.Delete(department);
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
@@ -97,7 +99,7 @@ namespace Demo.PresentationLayer.Controllers
             {
                 return BadRequest();
             }
-            var department = _repository.Get(id.Value);
+            var department = _repo.Get(id.Value);
             if (department is null) { return NotFound(); }
             return View(viewName ,department);
 
