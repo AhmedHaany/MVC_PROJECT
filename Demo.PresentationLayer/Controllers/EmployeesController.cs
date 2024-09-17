@@ -1,45 +1,68 @@
-﻿using Demo.BusinessLogicLayer.Interfaces;
+﻿using AutoMapper;
+using Demo.BusinessLogicLayer.Interfaces;
 using Demo.DataAccessLayer.Data;
 using Demo.DataAccessLayer.Models;
+using Demo.PresentationLayer.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Demo.PresentationLayer.Controllers
 {
     public class EmployeesController : Controller
     {
         private IEmployeeRepository _repo;
+        private IDepartmentRepository _repoDept;
         // private IGenericRepository<Employee> _repository; 
         // private readonly IEmployeeRepository _repository;
 
-        public EmployeesController(IEmployeeRepository repo)
+        private readonly IMapper _mapper;
+
+        public EmployeesController(IEmployeeRepository repo, IDepartmentRepository departmentRepository, IMapper mapper)
         {
             _repo = repo;
+            _repoDept = departmentRepository;
+            _mapper = mapper;
         }
 
 
-        
+
         [HttpGet]
-        public IActionResult Index()
+        public IActionResult Index(string? SearchValue)
         {
-           //  ViewData["Message"] = new Employee {Name ="Abdallah" }  ;
-            var employees = _repo.GetAll();
-            //Retrieve All Employees 
-            return View(employees);
+            var employees = Enumerable.Empty<Employee>();
+            if (string.IsNullOrWhiteSpace(SearchValue))
+            {
+                 employees = _repo.GetWithDepartment();
+            }
+           else
+            {
+                employees = _repo.GetAll(SearchValue);
+            }
+            
+            var employeeViewModel = _mapper.Map<IEnumerable<Employee>, IEnumerable<EmployeeViewModel>>(employees);
+
+            return View(employeeViewModel);
+
         }
 
 
         public IActionResult Create()
         {
+            var departments = _repoDept.GetAll();
+            SelectList listItems = new SelectList(departments,"Id","Name");
+            ViewBag.Departments = listItems;
             return View();
         }
 
         [HttpPost]
-        public IActionResult Create(Employee employee)
+        public IActionResult Create(EmployeeViewModel employeeVM)
         {
             //Server Side Validation 
+            var employee = _mapper.Map<EmployeeViewModel, Employee>(employeeVM);
+
             if (!ModelState.IsValid)
             {
-                return View(employee);
+                return View(employeeVM);
             }
             _repo.Create(employee);
 
@@ -52,15 +75,19 @@ namespace Demo.PresentationLayer.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit([FromRoute] int id, Employee employee)
+        public IActionResult Edit([FromRoute] int id, EmployeeViewModel employeVM)
         {
-            if (id != employee.Id) { return BadRequest(); }
+            if (id != employeVM.Id) { return BadRequest(); }
             //Server Side Validation 
             if (!ModelState.IsValid)
             {
                 try
                 {
-                    _repo.Update(employee);
+                    var employee = _mapper.Map<EmployeeViewModel, Employee >(employeVM);
+                    if (_repo.Update(employee) > 0)
+                    {
+                        TempData["Messege"] = $"Employee {employeVM.Name} Updated Succefully";
+                    }
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
@@ -69,7 +96,7 @@ namespace Demo.PresentationLayer.Controllers
                 }
             }
 
-            return View(employee);
+            return View(employeVM);
         }
 
         public IActionResult Delete(int? id) => EmployeeControllerHandler(id, nameof(Delete));
@@ -97,13 +124,22 @@ namespace Demo.PresentationLayer.Controllers
         }
         private IActionResult EmployeeControllerHandler(int? id, string viewName)
         {
+            if(viewName== nameof(Edit))
+            {
+                var departments = _repoDept.GetAll();
+                SelectList listItems = new SelectList(departments, "Id", "Name");
+                ViewBag.Departments = listItems;
+                
+            }
             if (!id.HasValue)
             {
                 return BadRequest();
             }
             var Employee = _repo.Get(id.Value);
             if (Employee is null) { return NotFound(); }
-            return View(viewName, Employee);
+            var employeeVM = _mapper.Map<EmployeeViewModel>(Employee);
+           
+            return View(viewName, employeeVM);
 
         }
     }
