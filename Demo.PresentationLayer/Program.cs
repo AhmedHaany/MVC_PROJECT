@@ -7,7 +7,7 @@ using System.Reflection;
 namespace Demo.PresentationLayer
 {
     public class Program
-    {      
+    {
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
@@ -15,15 +15,18 @@ namespace Demo.PresentationLayer
             // Add services to the container.
             builder.Services.AddControllersWithViews()
                 .AddRazorRuntimeCompilation();
-            //builder.Services.AddScoped<DataContext>();
+
             builder.Services.AddDbContext<DataContext>(option =>
             {
                 option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
-            builder.Services.AddAutoMapper(typeof(Program).Assembly);
-            builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
-            builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 
+            builder.Services.AddAutoMapper(typeof(Program).Assembly);
+
+            // Registering repositories
+           // builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+            //builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>(); // Add this line
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             var app = builder.Build();
 
@@ -31,15 +34,12 @@ namespace Demo.PresentationLayer
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-
             app.UseRouting();
-
             app.UseAuthorization();
 
             app.MapControllerRoute(

@@ -12,30 +12,15 @@ namespace Demo.BusinessLogicLayer.Repositories
     {
         protected  DataContext _dataContext;
 
-        public GenericRepository(DataContext dataContext)
-        {
-            _dataContext = dataContext;
-        }
-        public int Create(TEntity entity)
-        {
-            _dataContext.Set<TEntity>().Add(entity);
-            return _dataContext.SaveChanges();
-        }
+        public GenericRepository(DataContext dataContext) => _dataContext = dataContext;
+        public void Create(TEntity entity) => _dataContext.Set<TEntity>().Add(entity);
 
-        public int Delete(TEntity entity)
-        {
-            _dataContext.Set<TEntity>().Remove(entity);
-            return _dataContext.SaveChanges();
-        }
+        public void Delete(TEntity entity) => _dataContext.Set<TEntity>().Remove(entity);
 
         public TEntity Get(int id) => _dataContext.Set<TEntity>().Find(id);
 
         public IEnumerable<TEntity> GetAll() => _dataContext.Set<TEntity>().ToList();
 
-        public int Update(TEntity entity)
-        {
-            _dataContext.Set<TEntity>().Remove(entity);
-            return _dataContext.SaveChanges();
-        }
+        public void Update(TEntity entity) => _dataContext.Set<TEntity>().Remove(entity);
     }
 }
